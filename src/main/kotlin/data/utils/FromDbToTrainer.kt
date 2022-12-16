@@ -1,10 +1,12 @@
 package data.utils
 
 import domain.entity.users.Trainer
+import org.bson.types.ObjectId
 import java.sql.ResultSet
+import java.util.*
 
 fun ResultSet.toUser() = Trainer(
-        id = this.getInt(1).toString(),
+        id = ObjectId(Date(this.getInt(1).toLong())).toHexString(),
         name = this.getString(2),
         surname = this.getString(3),
         login = this.getString(4),

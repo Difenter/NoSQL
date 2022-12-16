@@ -14,6 +14,35 @@ class MySqlTrainersDaoImpl : TrainersDao {
 
     private var dbConnector: DbConnector = DbConnector
 
+    override suspend fun getAll(): List<Trainer> {
+
+        val users = mutableListOf<Trainer>()
+
+        var connection: Connection? = null
+        var statement: Statement? = null
+        var resultSet: ResultSet? = null
+
+        try {
+
+            connection = dbConnector.getConnection()
+            statement = connection?.createStatement()
+            resultSet = statement?.executeQuery(TrainersTable.GET_ALL)
+
+            while (resultSet?.next() == true) {
+                users.add(resultSet.toUser())
+            }
+
+        } catch (e: SQLException) {
+            e.printStackTrace()
+        } finally {
+            DBService.closeResultSet(resultSet)
+            DBService.closeStatement(statement)
+            DBService.closeConnection(connection)
+        }
+
+        return users
+    }
+
     override suspend fun getById(id: String): Trainer? {
 
         var user: Trainer? = null
@@ -68,7 +97,7 @@ class MySqlTrainersDaoImpl : TrainersDao {
 
             resultSet = statement?.executeQuery()
 
-            if (resultSet?.next() == true) {
+            while (resultSet?.next() == true) {
                 users.add(resultSet.toUser())
             }
 

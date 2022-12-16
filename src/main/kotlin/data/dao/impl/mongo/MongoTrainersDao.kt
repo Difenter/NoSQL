@@ -14,6 +14,12 @@ import org.bson.Document
 
 class MongoTrainersDao(private val db: MongoDatabase) : TrainersDao {
 
+    override suspend fun getAll() =
+        db.getCollection(Collections.TRAINERS)
+            .find()
+            .toList()
+            .map { Json.decodeFromString<Trainer>(it.toJson()) }
+
     override suspend fun getById(id: String) =
         db.getCollection(Collections.TRAINERS)
             .find(Filters.eq("_id", id))

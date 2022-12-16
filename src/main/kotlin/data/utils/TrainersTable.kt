@@ -8,7 +8,7 @@ object TrainersTable {
     const val GET_NUMBER_OF_CLIENTS = "{?= call get_number_of_clients(?)}"
 
     @Language("sql")
-    const val GET_ALL = "select * from trainer order by id limit ?, ?"
+    const val GET_ALL = "select * from trainer"
 
     @Language("sql")
     const val GET_BY_ID = "select * from trainer where id = ?"
