@@ -1,8 +1,7 @@
 package data.dao.impl.mongo
 
 import com.mongodb.client.MongoDatabase
-import com.mongodb.client.model.Filters
-import com.mongodb.client.model.Updates
+import com.mongodb.client.model.*
 import data.dao.TrainersDao
 import data.utils.Collections
 import domain.entity.users.Client
@@ -40,6 +39,49 @@ class MongoTrainersDao(private val db: MongoDatabase) : TrainersDao {
             ))
             .toList()
             .map { Json.decodeFromString<Trainer>(it.toJson()) }
+
+    override suspend fun getByName(name: String) =
+        db.getCollection(Collections.TRAINERS)
+            .aggregate(listOf(
+                Aggregates.match(Filters.eq("name", name))
+            ))
+            .toList()
+            .map { Json.decodeFromString<Trainer>(it.toJson()) }
+
+    override suspend fun getBySurname(surname: String) =
+        db.getCollection(Collections.TRAINERS)
+            .aggregate(listOf(
+                Aggregates.match(Filters.eq("surname", surname))
+            ))
+            .toList()
+            .map { Json.decodeFromString<Trainer>(it.toJson()) }
+
+    override suspend fun getMostPopularName() =
+        db.getCollection(Collections.TRAINERS)
+            .aggregate(listOf(
+                Aggregates.group(
+                    "\$name", Accumulators.sum("totalCount", 1)
+                ),
+                Aggregates.sort(Sorts.descending("totalCount"))
+            ))
+            .first()
+            ?.getString("_id")
+            ?: ""
+
+    override suspend fun getMostPopularNameAndSurname() =
+        db.getCollection(Collections.TRAINERS)
+            .aggregate(listOf(
+                Aggregates.project(
+                    Projections.computed("nameAndSurname", Document("\$concat", listOf("\$name", " ", "\$surname")))
+                ),
+                Aggregates.group(
+                    "\$nameAndSurname", Accumulators.sum("totalCount", 1)
+                ),
+                Aggregates.sort(Sorts.descending("totalCount"))
+            ))
+            .first()
+            ?.getString("_id")
+            ?: ""
 
     override suspend fun create(item: Trainer) =
         db.getCollection(Collections.TRAINERS)
