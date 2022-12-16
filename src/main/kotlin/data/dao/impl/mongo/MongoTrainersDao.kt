@@ -26,6 +26,15 @@ class MongoTrainersDao(private val db: MongoDatabase) : TrainersDao {
             .toList()
             .map { Json.decodeFromString<Client>(it.toJson()) }
 
+    override suspend fun getByNameAndSurname(name: String, surname: String) =
+        db.getCollection(Collections.TRAINERS)
+            .find(Filters.and(
+                Filters.eq("name", name),
+                Filters.eq("surname", surname)
+            ))
+            .toList()
+            .map { Json.decodeFromString<Trainer>(it.toJson()) }
+
     override suspend fun create(item: Trainer) =
         db.getCollection(Collections.TRAINERS)
             .insertOne(Document.parse(Json.encodeToString(item)))

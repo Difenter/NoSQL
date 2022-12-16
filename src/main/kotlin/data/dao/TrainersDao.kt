@@ -8,4 +8,6 @@ interface TrainersDao : BaseDao<Trainer> {
     suspend fun getById(id: String): Trainer?
 
     suspend fun getClientsByTrainerId(trainerId: String): List<Client>
+
+    suspend fun getByNameAndSurname(name: String, surname: String): List<Trainer>
 }
