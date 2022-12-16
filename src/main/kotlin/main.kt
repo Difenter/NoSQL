@@ -1,23 +1,21 @@
-import data.converters.MongoMySqlConverter
 import data.dao.impl.mongo.*
-import data.dao.impl.mysql.MySqlTrainersDaoImpl
 import data.utils.MongoDbProvider
 import domain.entity.users.Trainer
 import org.bson.types.ObjectId
 import java.util.*
 
-const val COUNT = 5
+const val COUNT = 10_000
 
 suspend fun main() {
 
     val db = MongoDbProvider.provideDb("workout_diary")
+    println(db.writeConcern)
     val mongoTrainersDao = MongoTrainersDao(db)
-    val mySqlTrainersDao = MySqlTrainersDaoImpl()
-    val converter = MongoMySqlConverter(mongoTrainersDao, mySqlTrainersDao)
 
+    println("Generating...")
     val trainers = mutableListOf<Trainer>()
     for (i in 1..COUNT) {
-        var trainer = Trainer(
+        val trainer = Trainer(
             id = ObjectId(Date().time.toInt() + (Math.random() * 16).toInt(), i).toHexString(),
             name = "name$i",
             surname = "surname$i",
@@ -26,29 +24,31 @@ suspend fun main() {
             phoneNumber = "phone$i",
             email = "email$i"
         )
-        while (trainers.any { ObjectId(it.id).date.time == ObjectId(trainer.id).date.time }) {
-            trainer = Trainer(
-                id = ObjectId(Date().time.toInt() + (Math.random() * 16).toInt(), i).toHexString(),
-                name = "name$i",
-                surname = "surname$i",
-                login = "login$i",
-                password = "password$i",
-                phoneNumber = "phone$i",
-                email = "email$i"
-            )
-        }
         trainers.add(trainer)
     }
 
-//    Migrating from mango to mysql
-//    for (trainer in trainers) {
-//        mongoTrainersDao.create(trainer)
-//    }
-//    converter.migrateToMySql()
+    println("Creating...")
+    for (trainer in trainers) {
+        var isSuccessful = true
+        for (i in 1..3) {
+            try {
+                mongoTrainersDao.create(trainer)
+                break
+            } catch (e: Exception) {
+                println(e.message)
+                if (i == 3) {
+                    isSuccessful = false
+                    break
+                }
+                Thread.sleep(1000)
+            }
+        }
+        if (!isSuccessful) {
+            println("An error has been occurred while writing...")
+            break
+        }
+    }
 
-//    Migrating from mysql to mongo
-//    for (trainer in trainers) {
-//        mySqlTrainersDao.create(trainer)
-//    }
-//    converter.migrateToMongo()
+    val allTrainers = mongoTrainersDao.getAll()
+    println("Total documents: ${allTrainers.size}")
 }
