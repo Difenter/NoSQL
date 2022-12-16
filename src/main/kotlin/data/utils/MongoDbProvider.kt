@@ -8,7 +8,7 @@ import com.mongodb.client.MongoClients
 object MongoDbProvider {
 
     private val client = MongoClients.create(MongoClientSettings.builder()
-        .writeConcern(WriteConcern.W1)
+        .writeConcern(WriteConcern.UNACKNOWLEDGED)
         .applyConnectionString(ConnectionString(
             "mongodb://127.0.0.1:27001,127.0.0.1:27002,127.0.0.1:27003"
         ))
